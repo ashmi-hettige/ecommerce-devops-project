@@ -1,12 +1,12 @@
 <template>
   <div style="font-family: Arial, sans-serif;">
     <Login v-if="!token" @login-success="loginUser" />
-    <Dashboard v-else :token="token" @logout="logoutUser" />
+    <Dashboard v-else @logout="logoutUser" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Login from './components/Login.vue';
 import Dashboard from './components/Dashboard.vue';
 
@@ -22,4 +22,8 @@ const logoutUser = () => {
   token.value = '';
   localStorage.removeItem('token');
 };
+
+// api.js fires this when the backend answers 401 (token expired/invalid)
+onMounted(() => window.addEventListener('auth-expired', logoutUser));
+onUnmounted(() => window.removeEventListener('auth-expired', logoutUser));
 </script>
