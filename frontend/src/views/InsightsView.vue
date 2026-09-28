@@ -12,13 +12,13 @@
       <section class="card panel">
         <div class="head"><h3>Needs restocking</h3>
           <button class="btn btn-sm" @click="$emit('go', 'inventory')">Open inventory →</button></div>
-        <table class="list" v-if="lowStock.length">
+        <table class="list" v-if="lowStock.length"><tbody>
           <tr v-for="p in lowStock" :key="p.id">
             <td><strong>{{ p.name }}</strong> <span class="muted">{{ p.sku }}</span></td>
             <td class="num">{{ p.quantity }} / {{ p.reorder_level }}</td>
             <td class="num"><span class="pill" :class="p.quantity === 0 ? 'pill-out' : 'pill-low'">{{ p.quantity === 0 ? 'Out' : 'Low' }}</span></td>
           </tr>
-        </table>
+        </tbody></table>
         <p v-else class="muted empty">All products are above their reorder level.</p>
       </section>
 
@@ -48,13 +48,13 @@
 
       <section class="card panel">
         <div class="head"><h3>Recent orders</h3></div>
-        <table class="list" v-if="recent.length">
+        <table class="list" v-if="recent.length"><tbody>
           <tr v-for="o in recent" :key="o.id">
             <td><strong>#{{ o.order_no }}</strong> <span class="muted">{{ o.customer }}</span></td>
             <td class="num">{{ money(o.total) }}</td>
             <td class="num"><span class="pill" :class="`pill-${o.status}`">{{ o.status[0].toUpperCase() + o.status.slice(1) }}</span></td>
           </tr>
-        </table>
+        </tbody></table>
         <p v-else class="muted empty">No orders yet.</p>
       </section>
     </div>

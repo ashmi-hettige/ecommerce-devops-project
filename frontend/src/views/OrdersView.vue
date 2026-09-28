@@ -86,14 +86,14 @@
     <!-- Order detail -->
     <Modal v-if="detail" :title="`Order #${detail.order_no}`" @close="detail = null">
       <p><b>{{ detail.customer }}</b><br /><span class="muted">{{ detail.ship_to || 'No address' }} · {{ fmtDate(detail.created_at) }}</span></p>
-      <table class="mini">
+      <table class="mini"><tbody>
         <tr v-for="it in detail.items" :key="it.product_id">
           <td>{{ it.name }} <span class="muted">{{ it.sku }}</span></td>
           <td class="num">{{ it.quantity }} × {{ money(it.price) }}</td>
           <td class="num">{{ money(it.quantity * it.price) }}</td>
         </tr>
         <tr class="sum"><td colspan="2">Total</td><td class="num">{{ money(detail.total) }}</td></tr>
-      </table>
+      </tbody></table>
       <p>Status: <span class="pill" :class="`pill-${detail.status}`">{{ cap(detail.status) }}</span></p>
     </Modal>
 
