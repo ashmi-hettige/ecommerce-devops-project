@@ -1,18 +1,27 @@
 <template>
-  <div style="max-width: 400px; margin: 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
-    <h2>🔒 E-Commerce Login</h2>
-    <form @submit.prevent="handleLogin">
-      <div style="margin-bottom: 10px;">
-        <input v-model="username" placeholder="Username" required style="width: 100%; padding: 8px; box-sizing: border-box;" />
+  <div class="wrap">
+    <form class="card login" @submit.prevent="handleLogin">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">▣</span>
+        <div>
+          <small>Scalable E-Commerce</small>
+          <strong>Inventory Management</strong>
+        </div>
       </div>
-      <div style="margin-bottom: 10px;">
-        <input v-model="password" type="password" placeholder="Password" required style="width: 100%; padding: 8px; box-sizing: border-box;" />
-      </div>
-      <button type="submit" :disabled="loading" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
-        {{ loading ? 'Logging in…' : 'Login' }}
+      <p class="muted">Sign in to manage stock and orders.</p>
+
+      <label class="field">Username
+        <input class="input" v-model="username" autocomplete="username" required />
+      </label>
+      <label class="field">Password
+        <input class="input" v-model="password" type="password" autocomplete="current-password" required />
+      </label>
+
+      <button type="submit" class="btn btn-primary full" :disabled="loading">
+        {{ loading ? 'Signing in…' : 'Sign in' }}
       </button>
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     </form>
-    <p v-if="errorMessage" style="color: red; text-align: center;">{{ errorMessage }}</p>
   </div>
 </template>
 
@@ -37,7 +46,7 @@ const handleLogin = async () => {
     });
     emit('login-success', response.data.access_token);
   } catch (error) {
-    // Don't print the password on screen; distinguish "wrong password" from "service down"
+    // Distinguish "wrong password" from "service down"
     errorMessage.value = error.response?.status === 401
       ? 'Invalid username or password.'
       : 'Auth service unavailable. Please try again.';
@@ -46,3 +55,17 @@ const handleLogin = async () => {
   }
 };
 </script>
+
+<style scoped>
+.wrap { min-height: 100vh; display: grid; place-items: center; padding: 16px;
+  background: linear-gradient(160deg, var(--header) 0 38%, var(--bg) 38%); }
+.login { width: 100%; max-width: 380px; padding: 28px; display: grid; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px;
+  background: var(--primary); color: #fff; font-size: 22px; }
+.brand small { display: block; font-size: 12px; color: var(--muted); }
+.brand strong { font-size: 19px; }
+.muted { margin: 0; }
+.full { width: 100%; justify-content: center; height: 40px; }
+.error { margin: 0; color: var(--danger); text-align: center; font-weight: 550; }
+</style>

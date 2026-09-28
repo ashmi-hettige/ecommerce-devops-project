@@ -1,26 +1,26 @@
 <template>
-  <div style="font-family: Arial, sans-serif;">
-    <Login v-if="!token" @login-success="loginUser" />
-    <Dashboard v-else @logout="logoutUser" />
-  </div>
+  <Login v-if="!token" @login-success="loginUser" />
+  <AppShell v-else @logout="logoutUser" />
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import Login from './components/Login.vue';
-import Dashboard from './components/Dashboard.vue';
+import AppShell from './components/AppShell.vue';
+import { store } from './store';
 
 // Check if a user is already logged in from a previous session
 const token = ref(localStorage.getItem('token') || '');
 
 const loginUser = (newToken) => {
-  token.value = newToken;
   localStorage.setItem('token', newToken);
+  token.value = newToken;
 };
 
 const logoutUser = () => {
   token.value = '';
   localStorage.removeItem('token');
+  store.reset();
 };
 
 // api.js fires this when the backend answers 401 (token expired/invalid)
