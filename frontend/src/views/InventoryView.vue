@@ -7,34 +7,42 @@
       <div class="toolbar">
         <input class="input search" v-model="query" placeholder="Search name, SKU, category…" />
         <span class="spacer"></span>
-        <button class="btn btn-primary" @click="openAdd">＋ Add Product</button>
-        <button class="btn btn-danger" :disabled="!selected.length" @click="confirmDelete = true">
+        <button v-if="can('stock:receive')" class="btn" @click="openStock('receive')">📥 Receive</button>
+        <button v-if="can('stock:count')" class="btn" @click="openStock('count')">🔢 Count</button>
+        <button v-if="can('products:write')" class="btn btn-primary" @click="openAdd">＋ Add Product</button>
+        <button v-if="can('products:write')" class="btn btn-danger" :disabled="!selected.length" @click="confirmDelete = true">
           Delete Selected{{ selected.length ? ` (${selected.length})` : '' }}
         </button>
         <button class="btn" @click="refresh">⟳ Refresh</button>
       </div>
 
       <DataTable :rows="rows" :columns="columns" :query="query" :search-keys="['name', 'sku', 'category']"
+                 :selectable="can('products:write')"
                  v-model:selected="selected" :default-sort="{ key: 'name', dir: 'asc' }"
-                 empty-text="No products match. Add one with “Add Product”.">
+                 empty-text="No products match.">
         <template #cell-name="{ row }">
           <strong>{{ row.name }}</strong>
           <div class="sku muted">{{ row.sku || 'No SKU' }}</div>
         </template>
         <template #cell-price="{ row }">{{ money(row.price) }}</template>
         <template #cell-quantity="{ row }">
-          <span class="qty">
+          <span class="qty" v-if="can('stock:adjust')">
             <button class="btn btn-sm btn-icon" :disabled="row.quantity === 0" @click="adjust(row, -1)" aria-label="Decrease">−</button>
             <span class="n">{{ row.quantity }}</span>
             <button class="btn btn-sm btn-icon" @click="adjust(row, 1)" aria-label="Increase">+</button>
           </span>
+          <span v-else class="n">{{ row.quantity }}</span>
         </template>
         <template #cell-status="{ row }">
           <span class="pill" :class="`pill-${stockStatus(row)}`">{{ statusLabel[stockStatus(row)] }}</span>
         </template>
         <template #cell-value="{ row }">{{ money(row.price * row.quantity) }}</template>
         <template #cell-actions="{ row }">
-          <button class="btn btn-sm" @click="openEdit(row)">Edit</button>
+          <span class="row-actions">
+            <button v-if="can('stock:receive')" class="btn btn-sm" @click="openStock('receive', row)">Receive</button>
+            <button v-if="can('stock:count')" class="btn btn-sm" @click="openStock('count', row)">Count</button>
+            <button v-if="can('products:write')" class="btn btn-sm" @click="openEdit(row)">Edit</button>
+          </span>
         </template>
       </DataTable>
     </section>
@@ -68,14 +76,47 @@
           <input class="input" v-model.trim="form.category" list="category-list" maxlength="40" />
           <datalist id="category-list"><option v-for="c in categories" :key="c.name" :value="c.name" /></datalist>
         </label>
-        <label class="field">Unit price (LKR) <input class="input" type="number" min="0" step="0.01" v-model.number="form.price" required /></label>
-        <label class="field">Quantity <input class="input" type="number" min="0" step="1" v-model.number="form.quantity" required /></label>
+        <label class="field">Unit price (LKR)
+          <input class="input" type="number" min="0" step="0.01" v-model.number="form.price" required :disabled="!can('products:price')" />
+          <span v-if="!can('products:price')" class="lock">🔒 Only managers can change prices</span>
+        </label>
+        <label class="field">Quantity
+          <input class="input" type="number" min="0" step="1" v-model.number="form.quantity" required :disabled="!!form.id" />
+          <span v-if="form.id" class="lock">Use Receive or Count to change stock</span>
+        </label>
         <label class="field">Reorder level <input class="input" type="number" min="0" step="1" v-model.number="form.reorder_level" required /></label>
       </form>
       <template #footer>
         <button class="btn" @click="form = null">Cancel</button>
         <button class="btn btn-primary" type="submit" form="product-form" :disabled="saving">
           {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      </template>
+    </Modal>
+
+    <!-- Receive delivery / stock count -->
+    <Modal v-if="stockForm" :title="stockForm.mode === 'receive' ? 'Receive delivery' : 'Stock count'" @close="stockForm = null">
+      <form id="stock-form" class="grid" @submit.prevent="saveStock">
+        <label class="field span2">Product
+          <select class="input" v-model="stockForm.productId" required>
+            <option value="" disabled>Choose a product…</option>
+            <option v-for="p in sortedProducts" :key="p.id" :value="p.id">{{ p.name }} {{ p.sku ? `(${p.sku})` : '' }} · {{ p.quantity }} in stock</option>
+          </select>
+        </label>
+        <template v-if="stockForm.mode === 'receive'">
+          <label class="field">Quantity received <input class="input" type="number" min="1" step="1" v-model.number="stockForm.quantity" required /></label>
+          <label class="field">Supplier / delivery ref. <input class="input" v-model.trim="stockForm.reference" maxlength="100" placeholder="e.g. PO-1042" /></label>
+        </template>
+        <template v-else>
+          <label class="field">Counted on shelf <input class="input" type="number" min="0" step="1" v-model.number="stockForm.counted" required /></label>
+          <label class="field">Note <input class="input" v-model.trim="stockForm.note" maxlength="200" placeholder="Optional" /></label>
+        </template>
+        <p v-if="stockPreview" class="span2 preview">{{ stockPreview }}</p>
+      </form>
+      <template #footer>
+        <button class="btn" @click="stockForm = null">Cancel</button>
+        <button class="btn btn-primary" type="submit" form="stock-form" :disabled="saving">
+          {{ saving ? 'Saving…' : stockForm.mode === 'receive' ? 'Receive stock' : 'Save count' }}
         </button>
       </template>
     </Modal>
@@ -92,33 +133,36 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import api from '../api';
 import DataTable from '../components/DataTable.vue';
 import Modal from '../components/Modal.vue';
 import { errorText, money, stockStatus, store } from '../store';
 
+const can = (p) => store.can(p);
 const query = ref('');
 const selected = ref([]);
 const filter = ref('all');
 const category = ref('');
 const form = ref(null);
+const stockForm = ref(null);
 const saving = ref(false);
 const confirmDelete = ref(false);
 
 const statusLabel = { ok: 'In stock', low: 'Low stock', out: 'Out of stock' };
 
-const columns = [
+const columns = computed(() => [
   { key: 'name', label: 'Product / SKU', sortable: true },
   { key: 'category', label: 'Category', sortable: true },
   { key: 'price', label: 'Unit price', sortable: true, align: 'right' },
   { key: 'quantity', label: 'Stock', sortable: true, align: 'center' },
   { key: 'status', label: 'Status', sortable: true, sortValue: (r) => r.quantity - r.reorder_level },
   { key: 'value', label: 'Stock value', sortable: true, align: 'right', sortValue: (r) => r.price * r.quantity },
-  { key: 'actions', label: '', align: 'right' },
-];
+  (can('products:write') || can('stock:receive') || can('stock:count')) && { key: 'actions', label: '', align: 'right' },
+].filter(Boolean));
 
 const lowCount = computed(() => store.products.filter((p) => stockStatus(p) !== 'ok').length);
+const sortedProducts = computed(() => [...store.products].sort((a, b) => a.name.localeCompare(b.name)));
 
 const stockFilters = computed(() => {
   const c = { ok: 0, low: 0, out: 0 };
@@ -141,19 +185,22 @@ const rows = computed(() => store.products.filter((p) =>
   (filter.value === 'all' || stockStatus(p) === filter.value) &&
   (!category.value || p.category === category.value)));
 
+// ----- product form -----
 const blank = () => ({ name: '', sku: '', category: 'General', price: 0, quantity: 0, reorder_level: 10 });
 const openAdd = () => { form.value = blank(); };
 const openEdit = (p) => { form.value = { ...p }; };
 
 async function save() {
   saving.value = true;
-  const { id, ...body } = form.value;
+  const { id, quantity, ...rest } = form.value;
+  const body = id ? rest : { ...rest, quantity };
+  if (!can('products:price')) delete body.price;
   try {
     if (id) await api.put(`/inventory/products/${id}`, body);
     else await api.post('/inventory/products', body);
     store.toast(id ? 'Product updated' : 'Product added');
     form.value = null;
-    await store.loadProducts();
+    await Promise.all([store.loadProducts(), store.loadMovements()]);
   } catch (e) {
     store.toast(errorText(e, 'Could not save product'), 'error');
   } finally {
@@ -161,10 +208,48 @@ async function save() {
   }
 }
 
+// ----- receive / count -----
+function openStock(mode, product = null) {
+  stockForm.value = {
+    mode, productId: product?.id || '', quantity: 1, reference: '',
+    counted: product?.quantity ?? 0, note: '',
+  };
+}
+
+const stockPreview = computed(() => {
+  const f = stockForm.value;
+  const p = f && store.products.find((x) => x.id === f.productId);
+  if (!p) return '';
+  if (f.mode === 'receive') return `${p.quantity} → ${p.quantity + (f.quantity || 0)} in stock`;
+  const diff = (f.counted ?? 0) - p.quantity;
+  return diff === 0 ? 'Matches the system — no change.' : `System has ${p.quantity}; this ${diff > 0 ? 'adds' : 'removes'} ${Math.abs(diff)}.`;
+});
+
+async function saveStock() {
+  const f = stockForm.value;
+  saving.value = true;
+  try {
+    if (f.mode === 'receive') {
+      await api.post(`/inventory/products/${f.productId}/receive`, { quantity: f.quantity, reference: f.reference });
+      store.toast(`Received ${f.quantity} units`);
+    } else {
+      await api.post(`/inventory/products/${f.productId}/count`, { counted: f.counted, note: f.note });
+      store.toast('Stock count saved');
+    }
+    stockForm.value = null;
+    await Promise.all([store.loadProducts(), store.loadMovements()]);
+  } catch (e) {
+    store.toast(errorText(e, 'Could not update stock'), 'error');
+  } finally {
+    saving.value = false;
+  }
+}
+
 async function adjust(p, delta) {
   try {
-    const { data } = await api.post(`/inventory/products/${p.id}/adjust`, { delta });
+    const { data } = await api.post(`/inventory/products/${p.id}/adjust`, { delta, note: 'Quick adjust' });
     p.quantity = data.quantity;
+    store.loadMovements();
   } catch (e) {
     store.toast(errorText(e, 'Could not update stock'), 'error');
   }
@@ -181,15 +266,28 @@ async function deleteSelected() {
 }
 
 async function refresh() {
-  await store.loadProducts();
+  await Promise.all([store.loadProducts(), store.loadMovements()]);
   store.toast('Inventory refreshed');
 }
+
+// Shortcuts from the Home page
+onMounted(() => {
+  const nav = store.navFilter;
+  store.navFilter = null;
+  if (nav === 'low') filter.value = 'low';
+  if (nav === 'receive' && can('stock:receive')) openStock('receive');
+  if (nav === 'count' && can('stock:count')) openStock('count');
+});
 </script>
 
 <style scoped>
 .sku { font-size: 12px; }
 .qty { display: inline-flex; align-items: center; gap: 6px; }
-.qty .n { min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+.n { display: inline-block; min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+.row-actions { display: inline-flex; gap: 6px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .span2 { grid-column: span 2; }
+.lock { font-weight: 500; font-size: 11.5px; }
+.preview { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); font-weight: 600; }
+@media (max-width: 520px) { .grid { grid-template-columns: 1fr; } .span2 { grid-column: auto; } }
 </style>

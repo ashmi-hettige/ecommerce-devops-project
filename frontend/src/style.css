@@ -1,49 +1,28 @@
-/* ---------- Design tokens ---------- */
+/* ---------- Design tokens: one dark green theme for the whole app ---------- */
 :root {
-  --bg: #eef2f1;
-  --surface: #ffffff;
-  --surface-2: #f6f8f7;
-  --border: #dfe5e3;
-  --text: #1d2a27;
-  --muted: #64736f;
-  --primary: #1f7a5c;
-  --primary-hover: #17644b;
-  --primary-soft: #e3f2ec;
-  --danger: #c43d3d;
-  --danger-soft: #fbe9e9;
-  --warn: #a86a12;
-  --warn-soft: #fdf3dc;
-  --info: #2f6fb0;
-  --info-soft: #e5eef8;
-  --header: #16302a;
+  --bg: #0f1614;
+  --surface: #17201d;
+  --surface-2: #1c2724;
+  --border: #2a3632;
+  --text: #e4ebe8;
+  --muted: #93a39e;
+  --primary: #3fae86;
+  --primary-hover: #53c29a;
+  --primary-soft: #1c3a30;
+  --danger: #e06464;
+  --danger-soft: #3a1f1f;
+  --warn: #e0a84a;
+  --warn-soft: #3a2f18;
+  --info: #6aa5e0;
+  --info-soft: #1b2b3d;
+  --violet: #a58cf0;
+  --violet-soft: #2a2340;
+  --header: #0b1210;
   --header-text: #e8f1ee;
-  --shadow: 0 1px 2px rgba(16, 32, 28, .06), 0 4px 16px rgba(16, 32, 28, .06);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
   --radius: 10px;
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1614;
-    --surface: #17201d;
-    --surface-2: #1c2724;
-    --border: #2a3632;
-    --text: #e4ebe8;
-    --muted: #93a39e;
-    --primary: #3fae86;
-    --primary-hover: #53c29a;
-    --primary-soft: #1c3a30;
-    --danger: #e06464;
-    --danger-soft: #3a1f1f;
-    --warn: #e0a84a;
-    --warn-soft: #3a2f18;
-    --info: #6aa5e0;
-    --info-soft: #1b2b3d;
-    --header: #0b1210;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
-    color-scheme: dark;
-  }
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -71,7 +50,8 @@ h3 { font-size: 15px; font-weight: 650; }
 }
 .btn:hover:not(:disabled) { background: var(--surface-2); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.input:disabled { opacity: .6; cursor: not-allowed; }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: #0b1210; }
 .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 .btn-danger { color: var(--danger); }
 .btn-danger:hover:not(:disabled) { background: var(--danger-soft); border-color: var(--danger); }
@@ -93,7 +73,18 @@ label.field { display: grid; gap: 4px; font-size: 12.5px; font-weight: 600; colo
 }
 .pill-pending { background: var(--warn-soft); color: var(--warn); }
 .pill-picked { background: var(--info-soft); color: var(--info); }
+.pill-packed { background: var(--violet-soft); color: var(--violet); }
 .pill-shipped { background: var(--primary-soft); color: var(--primary); }
+.pill-returned { background: var(--danger-soft); color: var(--danger); }
+.pill-role { background: var(--primary-soft); color: var(--primary); }
+.pill-role-admin { background: var(--danger-soft); color: var(--danger); }
+.pill-role-inventory_manager { background: var(--info-soft); color: var(--info); }
+.pill-role-warehouse { background: var(--warn-soft); color: var(--warn); }
+.pill-role-sales { background: var(--violet-soft); color: var(--violet); }
+/* stock movement types */
+.pill-mv-receive, .pill-mv-create, .pill-mv-return, .pill-mv-release { background: var(--primary-soft); color: var(--primary); }
+.pill-mv-reserve { background: var(--info-soft); color: var(--info); }
+.pill-mv-count, .pill-mv-adjust, .pill-mv-edit { background: var(--warn-soft); color: var(--warn); }
 .pill-low { background: var(--warn-soft); color: var(--warn); }
 .pill-out { background: var(--danger-soft); color: var(--danger); }
 .pill-ok { background: var(--primary-soft); color: var(--primary); }

@@ -11,7 +11,7 @@
     <div class="grid">
       <section class="card panel">
         <div class="head"><h3>Needs restocking</h3>
-          <button class="btn btn-sm" @click="$emit('go', 'inventory')">Open inventory →</button></div>
+          <button v-if="store.can('products:read')" class="btn btn-sm" @click="$emit('go', 'inventory')">Open inventory →</button></div>
         <table class="list" v-if="lowStock.length"><tbody>
           <tr v-for="p in lowStock" :key="p.id">
             <td><strong>{{ p.name }}</strong> <span class="muted">{{ p.sku }}</span></td>
@@ -24,7 +24,7 @@
 
       <section class="card panel">
         <div class="head"><h3>Orders by status</h3>
-          <button class="btn btn-sm" @click="$emit('go', 'orders')">Open orders →</button></div>
+          <button v-if="store.can('orders:read')" class="btn btn-sm" @click="$emit('go', 'orders')">Open orders →</button></div>
         <div class="bars">
           <div class="bar-row" v-for="s in statusBars" :key="s.key">
             <span class="bar-label">{{ s.label }}</span>
@@ -58,12 +58,38 @@
         <p v-else class="muted empty">No orders yet.</p>
       </section>
     </div>
+
+    <section class="card panel">
+      <div class="head"><h3>Stock movements</h3><span class="muted small">Every stock change, who made it and why</span></div>
+      <DataTable :rows="store.movements" :columns="moveColumns" :selectable="false" :query="moveQuery"
+                 :search-keys="['product_name', 'type', 'user', 'reference']"
+                 :default-sort="{ key: 'at', dir: 'desc' }" empty-text="No stock movements yet.">
+        <template #cell-at="{ row }">{{ fmtDateTime(row.at) }}</template>
+        <template #cell-type="{ row }"><span class="pill" :class="`pill-mv-${row.type}`">{{ MOVE_LABELS[row.type] || row.type }}</span></template>
+        <template #cell-delta="{ row }"><span :class="row.delta < 0 ? 'neg' : 'pos'">{{ row.delta > 0 ? '+' : '' }}{{ row.delta }}</span></template>
+        <template #cell-reference="{ row }"><span class="muted">{{ row.reference || '—' }}</span></template>
+      </DataTable>
+      <input class="input move-search" v-model="moveQuery" placeholder="Filter movements by product, type, user…" />
+    </section>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { money, stockStatus, store } from '../store';
+import { computed, onMounted, ref } from 'vue';
+import DataTable from '../components/DataTable.vue';
+import { MOVE_LABELS, fmtDateTime, money, stockStatus, store } from '../store';
+
+const moveQuery = ref('');
+const moveColumns = [
+  { key: 'at', label: 'When', sortable: true },
+  { key: 'product_name', label: 'Product', sortable: true },
+  { key: 'type', label: 'Type', sortable: true },
+  { key: 'delta', label: 'Change', sortable: true, align: 'right' },
+  { key: 'quantity_after', label: 'Stock after', sortable: true, align: 'right' },
+  { key: 'user', label: 'By', sortable: true },
+  { key: 'reference', label: 'Reference' },
+];
+onMounted(() => store.loadMovements());
 
 defineEmits(['go']);
 
@@ -72,14 +98,15 @@ const kpis = computed(() => {
   const units = p.reduce((s, x) => s + x.quantity, 0);
   const value = p.reduce((s, x) => s + x.price * x.quantity, 0);
   const low = p.filter((x) => stockStatus(x) !== 'ok').length;
-  const revenue = o.reduce((s, x) => s + x.total, 0);
-  const pending = o.filter((x) => x.status !== 'shipped').length;
+  const revenue = o.filter((x) => x.status !== 'returned').reduce((s, x) => s + x.total, 0);
+  const returned = o.filter((x) => x.status === 'returned').length;
+  const pending = o.filter((x) => ['pending', 'picked', 'packed'].includes(x.status)).length;
   return [
     { label: 'Products', value: p.length, hint: `${units.toLocaleString()} units in stock` },
     { label: 'Inventory value', value: money(value), hint: 'at unit price' },
     { label: 'Low / out of stock', value: low, hint: low ? 'need restocking' : 'all healthy', tone: low ? 'warn' : 'good' },
     { label: 'Orders', value: o.length, hint: `${pending} not shipped yet`, tone: pending ? 'warn' : 'good' },
-    { label: 'Revenue', value: money(revenue), hint: 'all orders' },
+    { label: 'Revenue', value: money(revenue), hint: returned ? `excludes ${returned} returned` : 'all orders' },
   ];
 });
 
@@ -89,7 +116,7 @@ const lowStock = computed(() => store.products
 
 const statusBars = computed(() => {
   const total = store.orders.length || 1;
-  return ['pending', 'picked', 'shipped'].map((key) => {
+  return ['pending', 'picked', 'packed', 'shipped', 'returned'].map((key) => {
     const count = store.orders.filter((o) => o.status === key).length;
     return { key, label: key[0].toUpperCase() + key.slice(1), count, pct: (count / total) * 100 };
   });
@@ -107,6 +134,10 @@ const recent = computed(() => [...store.orders].sort((a, b) => b.order_no - a.or
 
 <style scoped>
 .insights { display: grid; gap: 20px; }
+.small { font-size: 12.5px; }
+.pos { color: var(--primary); font-weight: 650; }
+.neg { color: var(--danger); font-weight: 650; }
+.move-search { max-width: 320px; margin-top: 12px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 14px; }
 .kpi { padding: 16px 18px; display: grid; gap: 4px; min-width: 0; }
 .kpi .label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -115,7 +146,7 @@ const recent = computed(() => [...store.orders].sort((a, b) => b.order_no - a.or
 .kpi .hint.warn { color: var(--warn); }
 .kpi .hint.good { color: var(--primary); }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 20px; }
-.head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 .list { width: 100%; border-collapse: collapse; }
 .list td { padding: 8px 0 8px 10px; border-bottom: 1px solid var(--border); }
 .list td:first-child { padding-left: 0; }
@@ -128,6 +159,8 @@ const recent = computed(() => [...store.orders].sort((a, b) => b.order_no - a.or
 .fill { height: 100%; border-radius: 5px; transition: width .4s; }
 .fill-pending { background: var(--warn); }
 .fill-picked { background: var(--info); }
+.fill-packed { background: var(--violet); }
+.fill-returned { background: var(--danger); }
 .fill-shipped, .fill-value { background: var(--primary); }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 </style>
