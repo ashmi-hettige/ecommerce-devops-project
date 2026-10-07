@@ -2,7 +2,6 @@
 
 A microservice-based inventory and order management system, built as a DevOps project.
 It has a Vue 3 web app in front of three FastAPI services that share a MongoDB database.
-Each part has its own Dockerfile.
 
 ## Features
 
@@ -42,7 +41,7 @@ Each part has its own Dockerfile.
 
 | Path | What it is |
 |---|---|
-| `frontend/` | Vue 3 + Vite app, `Dockerfile`, `nginx.conf` |
+| `frontend/` | Vue 3 + Vite web app |
 | `backend/auth-service/` | Login, registration, users, roles (port 8001) |
 | `backend/inventory-service/` | Products, stock and stock movements (port 8002) |
 | `backend/order-service/` | Orders, fulfilment and returns (port 8003) |
@@ -58,7 +57,6 @@ Branches: `frontend` and `backend` are where each part is developed, and `main` 
 | Database | MongoDB |
 | Monitoring | prometheus-fastapi-instrumentator |
 | Testing | pytest, httpx, mongomock-motor |
-| Containers | Docker |
 
 ## Roles and permissions
 
@@ -88,11 +86,11 @@ cd backend/auth-service          # then inventory-service, then order-service
 python -m venv .venv
 .venv\Scripts\activate           # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env             # then edit .env and set your own values
 uvicorn main:app --port 8001     # inventory: 8002, order: 8003
 ```
 
-`JWT_SECRET` must be the same in all three `.env` files.
+Set the environment variables listed under [Configuration](#configuration) first.
+`JWT_SECRET` must be the same for all three services.
 
 **2. Frontend:**
 
@@ -104,35 +102,13 @@ npm run dev
 
 Open http://localhost:5173. The Vite dev server forwards `/api/...` requests to the three services.
 
-**3. Sign in:** log in as `admin` with the `ADMIN_PASSWORD` from `auth-service/.env`. When
+**3. Sign in:** log in as `admin` with the `ADMIN_PASSWORD` you set for `auth-service`. When
 `SEED_DEMO_USERS=true`, the demo accounts `manager`, `warehouse` and `sales` are also created
 (see `auth-service/main.py`). Set `SEED_DEMO_USERS=false` outside development.
 
-## Docker
-
-Each part builds into its own image:
-
-```bash
-docker build -t inventory-frontend   ./frontend
-docker build -t auth-service         ./backend/auth-service
-docker build -t inventory-service    ./backend/inventory-service
-docker build -t order-service        ./backend/order-service
-```
-
-When you run them together (for example with Docker Compose), keep these points in mind:
-
-- Name the containers `auth-service`, `inventory-service` and `order-service`, because
-  `frontend/nginx.conf` forwards requests to those hostnames.
-- Point every service at the database with `MONGO_URL=mongodb://<mongo-host>:27017`.
-- Set `INVENTORY_URL=http://inventory-service:8002` on `order-service`.
-- Pass `JWT_SECRET` (the same value everywhere) and `ADMIN_PASSWORD` as environment variables.
-  The `.dockerignore` files keep `.env` out of the images.
-- Publish only the frontend's port 80 (for example `-p 8080:80`).
-
 ## Configuration
 
-Each service reads its settings from environment variables. `.env.example` in each service
-folder lists them all.
+Each service reads its settings from environment variables:
 
 | Variable | Used by | Purpose |
 |---|---|---|
@@ -144,8 +120,6 @@ folder lists them all.
 | `SEED_DEMO_USERS` | auth | Create demo accounts (development only) |
 | `MAX_FAILED_ATTEMPTS`, `LOCKOUT_MINUTES` | auth | Account lockout policy |
 | `INVENTORY_URL` | order | Where `order-service` reaches `inventory-service` |
-
-Never commit a real `.env` file.
 
 ## Tests
 
