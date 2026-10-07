@@ -5,15 +5,33 @@
       <p class="muted">{{ store.products.length }} products · {{ lowCount }} need restocking</p>
 
       <div class="toolbar">
-        <input class="input search" v-model="query" placeholder="Search name, SKU, category…" />
+        <input class="input search" v-model="query" placeholder="Search name, SKU, category" />
         <span class="spacer"></span>
-        <button v-if="can('stock:receive')" class="btn" @click="openStock('receive')">📥 Receive</button>
-        <button v-if="can('stock:count')" class="btn" @click="openStock('count')">🔢 Count</button>
+        <button v-if="can('stock:receive')" class="btn" @click="openStock('receive')">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v11" /><path d="m7.5 9.5 4.5 4.5 4.5-4.5" />
+            <path d="M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
+          </svg>
+          Receive
+        </button>
+        <button v-if="can('stock:count')" class="btn" @click="openStock('count')">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V3h6v1" />
+            <path d="m8.5 10 1.5 1.5 2.5-2.5" /><path d="M14.5 10.5H16" />
+            <path d="m8.5 15.5 1.5 1.5 2.5-2.5" /><path d="M14.5 16H16" />
+          </svg>
+          Count
+        </button>
         <button v-if="can('products:write')" class="btn btn-primary" @click="openAdd">＋ Add Product</button>
         <button v-if="can('products:write')" class="btn btn-danger" :disabled="!selected.length" @click="confirmDelete = true">
           Delete Selected{{ selected.length ? ` (${selected.length})` : '' }}
         </button>
-        <button class="btn" @click="refresh">⟳ Refresh</button>
+        <button class="btn" @click="refresh">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" /><path d="M20 4v5h-5" />
+          </svg>
+          Refresh
+        </button>
       </div>
 
       <DataTable :rows="rows" :columns="columns" :query="query" :search-keys="['name', 'sku', 'category']"
@@ -281,13 +299,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.sku { font-size: 12px; }
+.sku { font-size: 13px; }
 .qty { display: inline-flex; align-items: center; gap: 6px; }
 .n { display: inline-block; min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
 .row-actions { display: inline-flex; gap: 6px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .span2 { grid-column: span 2; }
-.lock { font-weight: 500; font-size: 11.5px; }
+.lock { font-weight: 500; font-size: 12.5px; }
 .preview { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); font-weight: 600; }
 @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } .span2 { grid-column: auto; } }
 </style>

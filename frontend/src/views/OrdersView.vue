@@ -5,13 +5,18 @@
       <p class="muted">You have {{ store.orders.length }} orders · {{ toFulfil }} still to fulfil</p>
 
       <div class="toolbar">
-        <input class="input search" v-model="query" placeholder="Search order #, customer, address…" />
+        <input class="input search" v-model="query" placeholder="Search order, customer, address" />
         <span class="spacer"></span>
         <button v-if="can('orders:create')" class="btn btn-primary" @click="openNew">＋ Add an Order</button>
         <button v-if="can('orders:delete')" class="btn btn-danger" :disabled="!selected.length" @click="confirmDelete = true">
           Cancel Selected{{ selected.length ? ` (${selected.length})` : '' }}
         </button>
-        <button class="btn" @click="refresh">⟳ Refresh</button>
+        <button class="btn" @click="refresh">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" /><path d="M20 4v5h-5" />
+          </svg>
+          Refresh
+        </button>
       </div>
 
       <DataTable :rows="rows" :columns="columns" :query="query"
@@ -47,11 +52,6 @@
           </button>
         </li>
       </ul>
-      <div class="sub">How it works</div>
-      <p class="help muted">
-        New orders reserve stock straight away. The warehouse <b>picks</b>, <b>packs</b> and <b>ships</b> them.
-        Cancelling before shipping puts stock back; shipped orders are handled as <b>returns</b>.
-      </p>
     </aside>
 
     <!-- New order -->
@@ -266,21 +266,21 @@ onMounted(() => {
 <style scoped>
 .link { border: 0; background: none; padding: 0; color: var(--primary); font: inherit; font-weight: 650; cursor: pointer; }
 .link:hover { text-decoration: underline; }
-.small { font-size: 12.5px; }
-.help { padding: 0 16px 16px; margin: 4px 0 0; font-size: 13px; }
+.small { font-size: 13.5px; }
+.help { padding: 0 16px 16px; margin: 4px 0 0; font-size: 14px; }
 .order-form { display: grid; gap: 18px; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .lines { display: grid; gap: 8px; }
 .line { display: grid; grid-template-columns: 1fr 80px 110px 28px; gap: 8px; align-items: center; }
-.line.head { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.line.head { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .add-line { justify-self: start; }
-.total { display: flex; justify-content: flex-end; gap: 12px; font-size: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+.total { display: flex; justify-content: flex-end; gap: 12px; font-size: 17px; border-top: 1px solid var(--border); padding-top: 12px; }
 .mini { width: 100%; border-collapse: collapse; margin: 8px 0 14px; }
 .mini td { padding: 8px 0; border-bottom: 1px solid var(--border); }
 .mini .sum td { font-weight: 700; border-bottom: 0; }
 .tl-title { margin: 6px 0 8px; }
 .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.timeline li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+.timeline li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
 @media (max-width: 560px) {
   .two { grid-template-columns: 1fr; }
   .line { grid-template-columns: 1fr 64px 28px; }

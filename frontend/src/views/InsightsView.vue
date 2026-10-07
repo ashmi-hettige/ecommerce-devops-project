@@ -11,7 +11,7 @@
     <div class="grid">
       <section class="card panel">
         <div class="head"><h3>Needs restocking</h3>
-          <button v-if="store.can('products:read')" class="btn btn-sm" @click="$emit('go', 'inventory')">Open inventory →</button></div>
+          <button v-if="store.can('products:read')" class="btn btn-sm" @click="$emit('go', 'inventory')">Open inventory</button></div>
         <table class="list" v-if="lowStock.length"><tbody>
           <tr v-for="p in lowStock" :key="p.id">
             <td><strong>{{ p.name }}</strong> <span class="muted">{{ p.sku }}</span></td>
@@ -24,7 +24,7 @@
 
       <section class="card panel">
         <div class="head"><h3>Orders by status</h3>
-          <button v-if="store.can('orders:read')" class="btn btn-sm" @click="$emit('go', 'orders')">Open orders →</button></div>
+          <button v-if="store.can('orders:read')" class="btn btn-sm" @click="$emit('go', 'orders')">Open orders</button></div>
         <div class="bars">
           <div class="bar-row" v-for="s in statusBars" :key="s.key">
             <span class="bar-label">{{ s.label }}</span>
@@ -60,7 +60,7 @@
     </div>
 
     <section class="card panel">
-      <div class="head"><h3>Stock movements</h3><span class="muted small">Every stock change, who made it and why</span></div>
+      <div class="head"><h3>Stock movements</h3></div>
       <DataTable :rows="store.movements" :columns="moveColumns" :selectable="false" :query="moveQuery"
                  :search-keys="['product_name', 'type', 'user', 'reference']"
                  :default-sort="{ key: 'at', dir: 'desc' }" empty-text="No stock movements yet.">
@@ -69,7 +69,7 @@
         <template #cell-delta="{ row }"><span :class="row.delta < 0 ? 'neg' : 'pos'">{{ row.delta > 0 ? '+' : '' }}{{ row.delta }}</span></template>
         <template #cell-reference="{ row }"><span class="muted">{{ row.reference || '—' }}</span></template>
       </DataTable>
-      <input class="input move-search" v-model="moveQuery" placeholder="Filter movements by product, type, user…" />
+      <input class="input move-search" v-model="moveQuery" placeholder="Filter by product, type, user" />
     </section>
   </div>
 </template>
@@ -81,12 +81,12 @@ import { MOVE_LABELS, fmtDateTime, money, stockStatus, store } from '../store';
 
 const moveQuery = ref('');
 const moveColumns = [
-  { key: 'at', label: 'When', sortable: true },
-  { key: 'product_name', label: 'Product', sortable: true },
-  { key: 'type', label: 'Type', sortable: true },
-  { key: 'delta', label: 'Change', sortable: true, align: 'right' },
-  { key: 'quantity_after', label: 'Stock after', sortable: true, align: 'right' },
-  { key: 'user', label: 'By', sortable: true },
+  { key: 'at', label: 'When', sortable: true, width: '16%' },
+  { key: 'product_name', label: 'Product', sortable: true, width: '18%' },
+  { key: 'type', label: 'Type', sortable: true, width: '13%' },
+  { key: 'delta', label: 'Change', sortable: true, width: '13%' },
+  { key: 'quantity_after', label: 'Stock after', sortable: true, width: '15%' },
+  { key: 'user', label: 'By', sortable: true, width: '14%' },
   { key: 'reference', label: 'Reference' },
 ];
 onMounted(() => store.loadMovements());
@@ -134,26 +134,31 @@ const recent = computed(() => [...store.orders].sort((a, b) => b.order_no - a.or
 
 <style scoped>
 .insights { display: grid; gap: 20px; }
-.small { font-size: 12.5px; }
+.small { font-size: 13.5px; }
 .pos { color: var(--primary); font-weight: 650; }
 .neg { color: var(--danger); font-weight: 650; }
-.move-search { max-width: 320px; margin-top: 12px; }
+.move-search { max-width: 280px; margin-top: 12px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 14px; }
 .kpi { padding: 16px 18px; display: grid; gap: 4px; min-width: 0; }
-.kpi .label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-.kpi .value { font-size: clamp(18px, 1.9vw, 24px); overflow-wrap: anywhere; font-weight: 700; font-variant-numeric: tabular-nums; }
-.kpi .hint { font-size: 12.5px; color: var(--muted); }
+.kpi .label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.kpi .value { font-size: clamp(19px, 1.9vw, 25px); overflow-wrap: anywhere; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .hint { font-size: 13.5px; color: var(--muted); }
 .kpi .hint.warn { color: var(--warn); }
 .kpi .hint.good { color: var(--primary); }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 20px; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 .list { width: 100%; border-collapse: collapse; }
 .list td { padding: 8px 0 8px 10px; border-bottom: 1px solid var(--border); }
-.list td:first-child { padding-left: 0; }
+/* name column takes the spare width, so the number and pill columns sit together on the right */
+.list td:first-child { padding-left: 0; width: 100%; }
+.list td + td { padding-left: 40px; }
+/* same-width pills, so every row has the same gap and the pills line up */
+.list .pill { min-width: 90px; text-align: center; }
 .list tr:last-child td { border-bottom: 0; }
 .empty { padding: 16px 0; }
-.bars { display: grid; gap: 12px; }
-.bar-row { display: grid; grid-template-columns: minmax(80px, 130px) 1fr auto; gap: 10px; align-items: center; }
+/* All rows share one grid, so every bar track starts and ends at the same x */
+.bars { display: grid; grid-template-columns: minmax(80px, 130px) 1fr auto; gap: 12px 10px; align-items: center; }
+.bar-row { display: contents; }
 .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .track { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
 .fill { height: 100%; border-radius: 5px; transition: width .4s; }

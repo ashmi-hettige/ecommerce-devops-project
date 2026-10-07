@@ -35,19 +35,26 @@
         <label for="rg-user">Username</label>
         <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5Z"/></svg>
       </div>
+      <p v-if="reg.username && !check.username" class="field-hint error">Use 3+ letters, numbers, _ . or -</p>
       <div class="af">
-        <input id="rg-pass" v-model="reg.password" type="password" placeholder=" " autocomplete="new-password" required />
+        <input id="rg-pass" v-model="reg.password" type="password" placeholder=" " autocomplete="new-password" required
+               @focus="pwFocus = true" @blur="pwFocus = false" />
         <label for="rg-pass">Password</label>
       </div>
+      <!-- Shown while typing the password; each part turns green once it's met -->
+      <p v-if="pwFocus || (reg.password && !passwordOk)" class="field-hint">
+        Use <span :class="{ ok: check.length }">8+ characters</span>,
+        <span :class="{ ok: check.letter }">a letter</span>,
+        <span :class="{ ok: check.number }">a number</span>
+      </p>
+      <p v-if="reg.password && reg.username && !check.notUsername" class="field-hint error">Password can't be your username</p>
       <div class="af">
         <input id="rg-pass2" v-model="reg.confirm" type="password" placeholder=" " autocomplete="new-password" required />
         <label for="rg-pass2">Confirm password</label>
       </div>
-      <ul class="rules-mini">
-        <li v-for="r in rules" :key="r.text" :class="{ ok: r.ok }">{{ r.ok ? '✓' : '•' }} {{ r.text }}</li>
-      </ul>
+      <p v-if="reg.confirm && !check.match" class="field-hint error">Passwords don't match</p>
 
-      <button type="submit" class="neon-btn" :disabled="loading || !rules.every((r) => r.ok)">
+      <button type="submit" class="neon-btn" :disabled="loading || !Object.values(check).every(Boolean)">
         {{ loading ? 'Creating…' : 'Register' }}
       </button>
 
@@ -71,19 +78,21 @@ const loading = ref(false);
 const message = ref('');
 const messageType = ref('error');
 const reg = ref({ full_name: '', username: '', password: '', confirm: '' });
+const pwFocus = ref(false);
 
 // Same rules the auth-service enforces (the server is the real check)
-const rules = computed(() => {
+const check = computed(() => {
   const r = reg.value;
-  return [
-    { text: '3+ char username', ok: /^[a-zA-Z0-9_.-]{3,32}$/.test(r.username) },
-    { text: '8+ characters', ok: r.password.length >= 8 },
-    { text: 'a letter', ok: /[A-Za-z]/.test(r.password) },
-    { text: 'a number', ok: /\d/.test(r.password) },
-    { text: 'not your username', ok: !!r.password && r.password.toLowerCase() !== r.username.toLowerCase() },
-    { text: 'passwords match', ok: !!r.password && r.password === r.confirm },
-  ];
+  return {
+    username: /^[a-zA-Z0-9_.-]{3,32}$/.test(r.username),
+    length: r.password.length >= 8,
+    letter: /[A-Za-z]/.test(r.password),
+    number: /\d/.test(r.password),
+    notUsername: !!r.password && r.password.toLowerCase() !== r.username.toLowerCase(),
+    match: !!r.password && r.password === r.confirm,
+  };
 });
+const passwordOk = computed(() => check.value.length && check.value.letter && check.value.number);
 
 function switchTo(m) {
   mode.value = m;

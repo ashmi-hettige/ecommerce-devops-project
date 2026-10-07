@@ -2,11 +2,8 @@
   <div class="shell">
     <header class="topbar">
       <div class="brand">
-        <span class="logo" aria-hidden="true">▣</span>
-        <div>
-          <small>Scalable E-Commerce</small>
-          <strong>Inventory Management</strong>
-        </div>
+        <span class="logo" aria-hidden="true"><img :src="logo" alt="" /></span>
+        <strong>Inventory Management</strong>
       </div>
       <div class="user">
         <span class="who">
@@ -51,6 +48,7 @@ import InsightsView from '../views/InsightsView.vue';
 import InventoryView from '../views/InventoryView.vue';
 import OrdersView from '../views/OrdersView.vue';
 import UsersView from '../views/UsersView.vue';
+import logo from '../assets/logo.svg';
 
 const showPassword = ref(false);
 
@@ -93,14 +91,13 @@ onUnmounted(() => window.removeEventListener('hashchange', onHash));
 }
 .brand { display: flex; align-items: center; gap: 12px; }
 .logo {
-  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px;
-  background: var(--primary); color: #fff; font-size: 20px;
+  flex: none; width: 44px; height: 44px;
 }
-.brand small { display: block; font-size: 11.5px; opacity: .7; }
-.brand strong { font-size: 18px; letter-spacing: -.01em; }
-.user { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.logo img { display: block; width: 100%; height: 100%; }
+.brand strong { font-size: 29px; letter-spacing: -.01em; }
+.user { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
 .who { display: grid; text-align: right; line-height: 1.25; margin-right: 4px; }
-.role { font-size: 11.5px; opacity: .75; }
+.role { font-size: 12.5px; opacity: .75; }
 .ghost { background: transparent; color: var(--header-text); border-color: rgba(255, 255, 255, .25); }
 .ghost:hover { background: rgba(255, 255, 255, .1) !important; }
 
@@ -110,9 +107,9 @@ onUnmounted(() => window.removeEventListener('hashchange', onHash));
   overflow-x: auto;
 }
 .tabs button {
-  position: relative; padding: 14px 18px; border: 0; background: none;
+  position: relative; padding: 15px 19px; border: 0; background: none;
   color: var(--muted); font: inherit; font-weight: 650; cursor: pointer;
-  text-transform: uppercase; letter-spacing: .05em; font-size: 12.5px; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: .05em; font-size: 13.5px; white-space: nowrap;
 }
 .tabs button:hover { color: var(--text); }
 .tabs button.active { color: var(--primary); }
@@ -121,9 +118,9 @@ onUnmounted(() => window.removeEventListener('hashchange', onHash));
   height: 3px; border-radius: 3px 3px 0 0; background: var(--primary);
 }
 .badge {
-  display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px;
-  border-radius: 9px; background: var(--warn-soft); color: var(--warn);
-  font-size: 11px; line-height: 18px; text-align: center; letter-spacing: 0;
+  display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px;
+  border-radius: 10px; background: var(--warn-soft); color: var(--warn);
+  font-size: 12px; line-height: 20px; text-align: center; letter-spacing: 0;
 }
 main { max-width: 1480px; margin: 0 auto; padding: 24px 28px 48px; }
 

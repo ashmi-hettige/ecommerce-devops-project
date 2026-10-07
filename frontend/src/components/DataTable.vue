@@ -4,7 +4,7 @@
 
   Props:
     rows        array of objects (each needs an `id`)
-    columns     [{ key, label, sortable?, align?, sortValue?(row) }]
+    columns     [{ key, label, sortable?, align?, width?, sortValue?(row) }]
     query       search text (filters on searchKeys)
     searchKeys  which fields the search looks at
     selected    v-model:selected, array of selected ids
@@ -21,7 +21,7 @@
                      @change="togglePage" aria-label="Select all on this page" />
             </th>
             <th v-for="col in columns" :key="col.key" :class="[col.align, { sortable: col.sortable }]"
-                @click="col.sortable && sortBy(col.key)">
+                :style="col.width && { width: col.width }" @click="col.sortable && sortBy(col.key)">
               {{ col.label }}
               <span v-if="col.sortable" class="arrow" :class="{ on: sortKey === col.key }">
                 {{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '↕' }}
@@ -153,28 +153,30 @@ function togglePage() {
 <style scoped>
 .dt-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
 table { width: 100%; border-collapse: collapse; }
-th, td { padding: 9px 10px; text-align: left; white-space: nowrap; }
+th, td { padding: 10px 12px; text-align: left; white-space: nowrap; }
 th {
   background: var(--surface-2); border-bottom: 1px solid var(--border);
-  font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+  font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
   user-select: none;
 }
 th.sortable { cursor: pointer; }
 th.sortable:hover { color: var(--text); }
-.arrow { font-size: 10px; opacity: .45; margin-left: 2px; }
+.arrow { font-size: 11px; opacity: .45; margin-left: 2px; }
 .arrow.on { opacity: 1; color: var(--primary); }
-td { border-bottom: 1px solid var(--border); height: 48px; }
+td { border-bottom: 1px solid var(--border); height: 50px; }
 tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
 tbody tr:hover td { background: var(--primary-soft); }
 tbody tr.selected td { background: var(--primary-soft); }
 tbody tr:last-child td { border-bottom: 0; }
-.right { text-align: right; }
+/* extra room after right-aligned numbers so they don't touch the next (left-aligned) column */
+.right { text-align: right; padding-right: 32px; }
+.right + :not(.right) { padding-left: 40px; }
 .center { text-align: center; }
 .check { width: 36px; text-align: center; }
 .empty { text-align: center; color: var(--muted); padding: 32px; }
 
 .dt-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; }
 .show { display: flex; align-items: center; gap: 8px; color: var(--muted); }
-.show select { width: 70px; height: 30px; }
+.show select { width: 74px; height: 32px; }
 .pager { display: flex; gap: 4px; flex-wrap: wrap; }
 </style>

@@ -93,7 +93,7 @@ async function submit() {
 
 <style scoped>
 .form { display: grid; gap: 14px; width: 100%; }
-.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
 .rules li.ok { color: var(--primary); }
 .error { margin: 0; color: var(--danger); font-weight: 550; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }

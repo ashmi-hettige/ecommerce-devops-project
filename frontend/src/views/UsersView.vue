@@ -7,10 +7,15 @@
         <template v-if="pendingCount"> · <b class="warn">{{ pendingCount }} awaiting approval</b></template></p>
 
       <div class="toolbar">
-        <input class="input search" v-model="query" placeholder="Search username, name, role…" />
+        <input class="input search" v-model="query" placeholder="Search user, name, role" />
         <span class="spacer"></span>
         <button class="btn btn-primary" @click="openAdd">＋ Add User</button>
-        <button class="btn" @click="refresh">⟳ Refresh</button>
+        <button class="btn" @click="refresh">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" /><path d="M20 4v5h-5" />
+          </svg>
+          Refresh
+        </button>
       </div>
 
       <DataTable :rows="rows" :columns="columns" :query="query" :selectable="false"
@@ -44,7 +49,6 @@
 
     <section class="card panel">
       <h3>Roles &amp; permissions</h3>
-      <p class="muted small">Enforced by every backend service; the menus only hide what you can't use.</p>
       <div class="matrix-wrap">
         <table class="matrix">
           <thead>
@@ -146,11 +150,11 @@ const resetting = ref(null);
 const saving = ref(false);
 
 const columns = [
-  { key: 'username', label: 'User', sortable: true },
-  { key: 'roleLabel', label: 'Role', sortable: true },
-  { key: 'state', label: 'Status', sortable: true, sortValue: (r) => (r.pending ? -1 : r.active ? (r.locked ? 1 : 0) : 2) },
-  { key: 'last_login', label: 'Last sign-in', sortable: true, sortValue: (r) => r.last_login || '' },
-  { key: 'actions', label: '', align: 'right' },
+  { key: 'username', label: 'User', sortable: true, width: '22%' },
+  { key: 'roleLabel', label: 'Role', sortable: true, width: '22%' },
+  { key: 'state', label: 'Status', sortable: true, width: '18%', sortValue: (r) => (r.pending ? -1 : r.active ? (r.locked ? 1 : 0) : 2) },
+  { key: 'last_login', label: 'Last sign-in', sortable: true, width: '18%', sortValue: (r) => r.last_login || '' },
+  { key: 'actions', label: ''},
 ];
 
 const rows = computed(() => store.users.map((u) => ({ ...u, id: u.username, roleLabel: u.pending ? '—' : ROLE_LABELS[u.role] || u.role })));
@@ -217,22 +221,24 @@ onMounted(async () => {
 
 <style scoped>
 .users { display: grid; gap: 20px; }
-.small { font-size: 12.5px; }
+.small { font-size: 13.5px; }
 .warn { color: var(--warn); }
-.you { margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; }
+.you { margin-left: 6px; padding: 2px 7px; border-radius: 6px; background: var(--primary-soft); color: var(--primary); font-size: 12px; font-weight: 700; }
 .row-actions { display: inline-flex; gap: 6px; }
 .form { display: grid; gap: 14px; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .pwrow { display: flex; gap: 6px; }
-.pwrow .btn { height: 34px; }
+.pwrow .btn { height: 36px; }
 .pwrow .input { font-family: ui-monospace, Consolas, monospace; }
-.hint { font-weight: 500; font-size: 12px; }
+.hint { font-weight: 500; font-size: 13px; }
 .check { display: flex; gap: 8px; align-items: center; font-weight: 600; }
 .matrix-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; }
 .matrix { width: 100%; border-collapse: collapse; }
-.matrix th, .matrix td { padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.matrix th { background: var(--surface-2); font-size: 12px; color: var(--muted); text-align: center; }
-.matrix th:first-child { text-align: left; }
+.matrix th, .matrix td { padding: 9px 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.matrix th { background: var(--surface-2); font-size: 13px; color: var(--muted); text-align: center; }
+/* permission names get a fixed share; the four role columns split the rest equally */
+.matrix th:first-child { text-align: left; width: 32%; }
+.matrix th:not(:first-child) { width: 17%; }
 .matrix tbody tr:last-child td { border-bottom: 0; }
 .c { text-align: center; }
 .yes { color: var(--primary); font-weight: 800; }
